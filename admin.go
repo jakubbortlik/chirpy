@@ -14,9 +14,14 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	html := fmt.Sprintf(
-		"<html><body><h1>Welcome, Chirpy Admin</h1><p>Chirpy has been visited %d times!</p></body></html>",
-		cfg.fileserverHits.Load(),
+	html := fmt.Sprintf(`
+<html>
+	<body>
+		<h1>Welcome, Chirpy Admin</h1>
+		<p>Chirpy has been visited %d times!</p>
+	</body>
+</html>
+	`, cfg.fileserverHits.Load(),
 	)
-	w.Write(fmt.Append([]byte{}, html))
+	w.Write([]byte(html))
 }
