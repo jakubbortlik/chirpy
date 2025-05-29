@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"regexp"
+	"strings"
 )
 
 func handlerChirpValidation(w http.ResponseWriter, r *http.Request) {
@@ -32,10 +32,27 @@ func handlerChirpValidation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	const profanityReplacement = "****"
-	re := regexp.MustCompile(`(?i)(kerfuffle|sharbert|fornax)`)
-	cleaned_body := re.ReplaceAllString(*params.Body, profanityReplacement)
+	badWords := map[string]struct{}{
+		"kerfuffle": {},
+		"sharbert":  {},
+		"fornax":    {},
+	}
+
+	cleanedBody := getCleanedbody(params.Body, badWords, profanityReplacement)
 	respondWithJSON(w, http.StatusOK, returnVals{
-		CleanedBody: &cleaned_body,
+		CleanedBody: cleanedBody,
 	})
 	return
+}
+
+func getCleanedbody(body *string, badWords map[string]struct{}, replacement string) *string {
+	words := strings.Split(*body, " ")
+	for i, word := range words {
+		loweredWord := strings.ToLower(word)
+		if _, ok := badWords[loweredWord]; ok {
+			words[i] = replacement
+		}
+	}
+	cleaned := strings.Join(words, " ")
+	return &cleaned
 }
