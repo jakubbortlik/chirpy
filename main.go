@@ -1,6 +1,8 @@
 package main
 
+import _ "github.com/lib/pq"
 import (
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"sync/atomic"
@@ -11,6 +13,8 @@ type apiConfig struct {
 }
 
 func main() {
+	godotenv.Load()
+
 	const filepathRoot = "."
 	const port = "8080"
 
@@ -22,6 +26,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("POST /api/validate_chirp", handlerChirpValidation)
+	mux.HandleFunc("POST /api/users", handlerUsers)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
