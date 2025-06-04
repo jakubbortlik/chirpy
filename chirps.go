@@ -1,17 +1,28 @@
 package main
 
+import "github.com/jakubbortlik/chirpy/internal/database"
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
 )
 
-func handlerChirpValidation(w http.ResponseWriter, r *http.Request) {
+func handlerChirps(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body *string `json:"body"`
+		UserId uuid.UUID `json:"user_id"`
 	}
 	type returnVals struct {
-		CleanedBody *string `json:"cleaned_body"`
+		Id uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Body *string `json:"body"`
+		UserId uuid.UUID `json:"user_id"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -39,8 +50,28 @@ func handlerChirpValidation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cleanedBody := getCleanedbody(params.Body, badWords, profanityReplacement)
-	respondWithJSON(w, http.StatusOK, returnVals{
-		CleanedBody: cleanedBody,
+
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	var chirp database.Chirp
+	if err == nil {
+		dbQueries := database.New(db)
+		chirp, err = dbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
+			Body: *cleanedBody,
+			UserID: params.UserId,
+		})
+	}
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Creating chirp failed.", err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, returnVals{
+		Id: chirp.ID,
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+		Body: cleanedBody,
+		UserId: params.UserId,
 	})
 	return
 }
