@@ -10,21 +10,26 @@ import (
 	"time"
 )
 
+type User struct {
+	Id        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     *string   `json:"email"`
+}
+
 func handlerUsers(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email *string `json:"email"`
 	}
-	type returnVals struct {
-		Id uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Email *string `json:"email"`
+	type response struct {
+		User
 	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Something went wrong", err)
+		respondWithError(w, http.StatusInternalServerError, "Decoding parameters failed", err)
 		return
 	}
 
@@ -39,10 +44,12 @@ func handlerUsers(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Creating user failed", err)
 		return
 	}
-	respondWithJSON(w, http.StatusCreated, returnVals{
-		Id: user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email: &user.Email,
+	respondWithJSON(w, http.StatusCreated, response{
+		User: User{
+			Id:        user.ID,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Email:     &user.Email,
+		},
 	})
 }
