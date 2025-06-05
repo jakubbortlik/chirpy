@@ -18,10 +18,10 @@ type Chirp struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Body      string   `json:"body"`
-	UserId    uuid.UUID `json:"user_id"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
-func handlerChirps(w http.ResponseWriter, r *http.Request) {
+func handlerPostChirps(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body   *string   `json:"body"`
 		UserId uuid.UUID `json:"user_id"`
@@ -61,7 +61,7 @@ func handlerChirps(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: chirp.CreatedAt,
 			UpdatedAt: chirp.UpdatedAt,
 			Body:      cleanedBody,
-			UserId:    params.UserId,
+			UserID:    params.UserId,
 		},
 	})
 	return
