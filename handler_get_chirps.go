@@ -31,10 +31,6 @@ func handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 			UserID:    chirp.UserID,
 		})
 	}
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Getting chirps failed.", err)
-		return
-	}
 
 	respondWithJSON(w, http.StatusOK, chirps)
 	return
