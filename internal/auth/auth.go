@@ -5,11 +5,11 @@ import (
 )
 
 func HashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 16)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(hash), err
 }
 
-func CheckPasswordHash(hash, password string) error {
+func CheckPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err
 }
