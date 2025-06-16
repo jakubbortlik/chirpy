@@ -1,7 +1,11 @@
 package auth
 
 import (
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 func TestCheckPasswordHash(t *testing.T) {
@@ -56,6 +60,82 @@ func TestCheckPasswordHash(t *testing.T) {
 			err := CheckPasswordHash(tt.password, tt.hash)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CheckPasswordHash() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestMakeJWT(t *testing.T) {
+	// Prepare some data for testing
+	tokenSecret := "correctSectetToken"
+	anotherSecret := "anotherSectetToken"
+	exampleUserID := uuid.MustParse("47985c9a-4bee-45f5-b786-2cdff9045c9b")
+
+	tests := []struct {
+		name            string
+		userID          uuid.UUID
+		createSecret    string
+		validateSecret  string
+		expiresIn       time.Duration
+		wantMakeErr     bool
+		wantValidateErr bool
+	}{
+		{
+			name:            "Valid token creation",
+			userID:          exampleUserID,
+			createSecret:    tokenSecret,
+			validateSecret:  tokenSecret,
+			expiresIn:       time.Hour,
+			wantMakeErr:     false,
+			wantValidateErr: false,
+		},
+		{
+			name:            "Empty secret",
+			userID:          exampleUserID,
+			createSecret:    tokenSecret,
+			validateSecret:  "",
+			expiresIn:       time.Hour,
+			wantMakeErr:     false,
+			wantValidateErr: true,
+		},
+		{
+			name:            "Wrong secret",
+			userID:          exampleUserID,
+			createSecret:    tokenSecret,
+			validateSecret:  anotherSecret,
+			expiresIn:       time.Hour,
+			wantMakeErr:     false,
+			wantValidateErr: true,
+		},
+		{
+			name:            "Expired token",
+			userID:          exampleUserID,
+			createSecret:    tokenSecret,
+			validateSecret:  anotherSecret,
+			expiresIn:       -1 * time.Hour,
+			wantMakeErr:     false,
+			wantValidateErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			token, err := MakeJWT(tt.userID, tt.createSecret, tt.expiresIn)
+			if (err != nil) != tt.wantMakeErr {
+				t.Errorf("MakeJWT() error = %v, wantErr %v", err, tt.wantMakeErr)
+			}
+			if token == "" {
+				t.Error("Expected non-empty token string")
+			}
+			parts := strings.Split(token, ".")
+			if len(parts) != 3 {
+				t.Errorf("Expected JWT to have 3 parts, got %d", len(parts))
+			}
+			returnedUserID, err := ValidateJWT(token, tt.validateSecret)
+			if (err != nil) != tt.wantValidateErr {
+				t.Errorf("ValidateJWT() error = %v", err)
+			}
+			if !tt.wantValidateErr && returnedUserID != tt.userID {
+				t.Errorf("Expected returnedUserID `%s` to be the same as input userID `%s", returnedUserID, tt.userID)
 			}
 		})
 	}
