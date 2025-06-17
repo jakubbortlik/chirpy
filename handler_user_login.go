@@ -3,25 +3,24 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/jakubbortlik/chirpy/internal/auth"
 	"github.com/jakubbortlik/chirpy/internal/database"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func handlerUserLogin(w http.ResponseWriter, r *http.Request) {
+func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConfig) {
 	type parameters struct {
-		Password *string `json:"password"`
-		Email    *string `json:"email"`
+		Password         *string `json:"password"`
+		Email            *string `json:"email"`
+		ExpiresInSeconds *int32  `json:"expires_in_seconds,omitempty"`
 	}
 	type response struct {
-		Id uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Email string `json:"email"`
+		User
+		Token string `json:"token"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -30,6 +29,13 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Decoding parameters failed", err)
 		return
+	}
+
+	var expirationTime int32
+	if params.ExpiresInSeconds == nil || *params.ExpiresInSeconds > 3600 {
+		expirationTime = 3600
+	} else {
+		expirationTime = *params.ExpiresInSeconds
 	}
 
 	dbURL := os.Getenv("DB_URL")
@@ -46,10 +52,21 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	JWTToken, err := auth.MakeJWT(
+		user.ID,
+		apiConfig.JWTSecret,
+		time.Duration(expirationTime)*time.Second,
+	)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create token", err)
+	}
 	respondWithJSON(w, http.StatusOK, response{
-		Id: user.ID,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Email: user.Email,
+		User: User{
+			Id:        user.ID,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Email:     &user.Email,
+		},
+		Token: JWTToken,
 	})
 }

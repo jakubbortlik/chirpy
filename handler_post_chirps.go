@@ -9,30 +9,42 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jakubbortlik/chirpy/internal/database"
 	"github.com/google/uuid"
+	"github.com/jakubbortlik/chirpy/internal/auth"
+	"github.com/jakubbortlik/chirpy/internal/database"
 )
 
 type Chirp struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	Body      string   `json:"body"`
+	Body      string    `json:"body"`
 	UserID    uuid.UUID `json:"user_id"`
 }
 
-func handlerPostChirps(w http.ResponseWriter, r *http.Request) {
+func handlerPostChirps(w http.ResponseWriter, r *http.Request, apiConfig *apiConfig) {
 	type parameters struct {
-		Body   *string   `json:"body"`
-		UserId uuid.UUID `json:"user_id"`
+		Body *string `json:"body"`
 	}
 	type response struct {
 		Chirp
 	}
 
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "No token in header", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, apiConfig.JWTSecret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Token invalid", err)
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Decoding parameters failed", err)
 		return
@@ -47,7 +59,7 @@ func handlerPostChirps(w http.ResponseWriter, r *http.Request) {
 		dbQueries := database.New(db)
 		chirp, err = dbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
 			Body:   cleanedBody,
-			UserID: params.UserId,
+			UserID: userID,
 		})
 	}
 	if err != nil {
@@ -61,7 +73,7 @@ func handlerPostChirps(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: chirp.CreatedAt,
 			UpdatedAt: chirp.UpdatedAt,
 			Body:      cleanedBody,
-			UserID:    params.UserId,
+			UserID:    chirp.UserID,
 		},
 	})
 	return

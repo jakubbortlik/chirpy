@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -136,6 +137,62 @@ func TestMakeJWT(t *testing.T) {
 			}
 			if !tt.wantValidateErr && returnedUserID != tt.userID {
 				t.Errorf("Expected returnedUserID `%s` to be the same as input userID `%s", returnedUserID, tt.userID)
+			}
+		})
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	header := make(http.Header)
+	header["Authorization"] = []string{"Bearer TOKEN"}
+
+	tests := []struct {
+		name        string
+		header      string
+		bearerToken string
+		token       string
+		wantErr     bool
+	}{
+		{
+			name:        "Token present",
+			header:      "Authorization",
+			bearerToken: "Bearer TOKEN",
+			token:       "TOKEN",
+			wantErr:     false,
+		},
+		{
+			name:        "Extra spaces",
+			header:      "Authorization",
+			bearerToken: "Bearer TOKEN ",
+			token:       "TOKEN",
+			wantErr:     false,
+		},
+		{
+			name:        "Wrong header",
+			header:      "Authentication",
+			bearerToken: "Bearer TOKEN ",
+			token:       "TOKEN",
+			wantErr:     true,
+		},
+		{
+			name:        "Malformed header",
+			header:      "Authorization",
+			bearerToken: "Barer TOKEN",
+			token:       "TOKEN",
+			wantErr:     true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			header := make(http.Header)
+			header[tt.header] = []string{tt.bearerToken}
+			token, err := GetBearerToken(header)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetBearerToken() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && token != tt.token {
+				t.Errorf("Expected token to be `%s` but got `%s`", tt.token, token)
 			}
 		})
 	}
