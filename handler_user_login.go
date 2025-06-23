@@ -16,11 +16,11 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 	type parameters struct {
 		Password         *string `json:"password"`
 		Email            *string `json:"email"`
-		ExpiresInSeconds *int32  `json:"expires_in_seconds,omitempty"`
 	}
 	type response struct {
 		User
 		Token string `json:"token"`
+		RefreshToken string `json:"refresh_token"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -29,13 +29,6 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Decoding parameters failed", err)
 		return
-	}
-
-	var expirationTime int32
-	if params.ExpiresInSeconds == nil || *params.ExpiresInSeconds > 3600 {
-		expirationTime = 3600
-	} else {
-		expirationTime = *params.ExpiresInSeconds
 	}
 
 	dbURL := os.Getenv("DB_URL")
@@ -52,13 +45,26 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 		return
 	}
 
+	refreshToken := auth.MakeRefreshToken()
+	expiresAt := time.Now().Add(60 * 24 * time.Hour)
+
+	createTokenParams := database.CreateRefreshTokenParams{
+		Token: refreshToken,
+		UserID: user.ID,
+		ExpiresAt: expiresAt,
+	}
+
+	err = dbQueries.CreateRefreshToken(r.Context(), createTokenParams)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Creating refresh token failed", err)
+	}
+
 	JWTToken, err := auth.MakeJWT(
 		user.ID,
 		apiConfig.JWTSecret,
-		time.Duration(expirationTime)*time.Second,
 	)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't create token", err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create JWT token", err)
 	}
 	respondWithJSON(w, http.StatusOK, response{
 		User: User{
@@ -68,5 +74,6 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 			Email:     &user.Email,
 		},
 		Token: JWTToken,
+		RefreshToken: refreshToken,
 	})
 }

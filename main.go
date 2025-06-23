@@ -39,6 +39,10 @@ func main() {
 	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, r *http.Request) {
 		handlerUserLogin(w, r, apiCfg)
 	})
+	mux.HandleFunc("POST /api/refresh", func(w http.ResponseWriter, r *http.Request) {
+		handlerRefreshToken(w, r, apiCfg)
+	})
+	mux.HandleFunc("POST /api/revoke", handlerRevokeToken)
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
