@@ -33,7 +33,12 @@ func main() {
 	mux.HandleFunc("POST /api/chirps", func(w http.ResponseWriter, r *http.Request) {
 		handlerPostChirps(w, r, apiCfg)
 	})
-	mux.HandleFunc("POST /api/users", handlerUsers)
+
+	mux.HandleFunc("POST /api/users", handlerCreateUser)
+	mux.HandleFunc("PUT /api/users", func(w http.ResponseWriter, r *http.Request) {
+		handlerUpdateUser(w, r, apiCfg)
+	})
+
 	mux.HandleFunc("GET /api/chirps", handlerGetChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", handlerGetIndividualChirp)
 	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, r *http.Request) {

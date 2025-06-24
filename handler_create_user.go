@@ -19,7 +19,7 @@ type User struct {
 	Email     *string   `json:"email"`
 }
 
-func handlerUsers(w http.ResponseWriter, r *http.Request) {
+func handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    *string `json:"email"`
 		Password *string `json:"password"`
