@@ -22,7 +22,7 @@ type Chirp struct {
 	UserID    uuid.UUID `json:"user_id"`
 }
 
-func handlerPostChirps(w http.ResponseWriter, r *http.Request, apiConfig *apiConfig) {
+func handlerPostChirp(w http.ResponseWriter, r *http.Request, apiConfig *apiConfig) {
 	type parameters struct {
 		Body *string `json:"body"`
 	}
