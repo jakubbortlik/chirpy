@@ -36,5 +36,5 @@ func handlerRevokeToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusNoContent, nil)
+	respondWithNoBody(w, http.StatusNoContent)
 }

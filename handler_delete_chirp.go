@@ -56,5 +56,5 @@ func handlerDeleteChirp(w http.ResponseWriter, r *http.Request, apiConfig *apiCo
 		return
 	}
 
-	respondWithJSON(w, http.StatusNoContent, nil)
+	respondWithNoBody(w, http.StatusNoContent)
 }
