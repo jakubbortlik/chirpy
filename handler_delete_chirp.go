@@ -50,7 +50,7 @@ func handlerDeleteChirp(w http.ResponseWriter, r *http.Request, apiConfig *apiCo
 		return
 	}
 
-	dbQueries.DeleteChirp(r.Context(), chirpID)
+	err = dbQueries.DeleteChirp(r.Context(), chirpID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Chirp not found.", err)
 		return
