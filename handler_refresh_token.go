@@ -37,7 +37,7 @@ func handlerRefreshToken(w http.ResponseWriter, r *http.Request, apiConfig *apiC
 		return
 	}
 
-	if refreshToken.ExpiresAt.Before(time.Now())  {
+	if refreshToken.ExpiresAt.Before(time.Now()) {
 		respondWithError(w, http.StatusUnauthorized, "Refresh token expired", err)
 		return
 	}
@@ -60,7 +60,7 @@ func handlerRefreshToken(w http.ResponseWriter, r *http.Request, apiConfig *apiC
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create JWT token", err)
 	}
-	
+
 	respondWithJSON(w, http.StatusOK, response{
 		Token: JWTToken,
 	})

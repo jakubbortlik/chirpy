@@ -14,12 +14,12 @@ import (
 
 func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConfig) {
 	type parameters struct {
-		Password         *string `json:"password"`
-		Email            *string `json:"email"`
+		Password *string `json:"password"`
+		Email    *string `json:"email"`
 	}
 	type response struct {
 		User
-		Token string `json:"token"`
+		Token        string `json:"token"`
 		RefreshToken string `json:"refresh_token"`
 	}
 
@@ -49,8 +49,8 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 	expiresAt := time.Now().Add(60 * 24 * time.Hour)
 
 	createTokenParams := database.CreateRefreshTokenParams{
-		Token: refreshToken,
-		UserID: user.ID,
+		Token:     refreshToken,
+		UserID:    user.ID,
 		ExpiresAt: expiresAt,
 	}
 
@@ -74,7 +74,7 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 			Email:       &user.Email,
 			IsChirpyRed: user.IsChirpyRed,
 		},
-		Token: JWTToken,
+		Token:        JWTToken,
 		RefreshToken: refreshToken,
 	})
 }
