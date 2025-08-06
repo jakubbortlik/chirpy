@@ -68,10 +68,11 @@ func handlerUserLogin(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 	}
 	respondWithJSON(w, http.StatusOK, response{
 		User: User{
-			Id:        user.ID,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Email:     &user.Email,
+			Id:          user.ID,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
+			Email:       &user.Email,
+			IsChirpyRed: user.IsChirpyRed,
 		},
 		Token: JWTToken,
 		RefreshToken: refreshToken,
