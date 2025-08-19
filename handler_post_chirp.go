@@ -76,7 +76,6 @@ func handlerPostChirp(w http.ResponseWriter, r *http.Request, apiConfig *apiConf
 			UserID:    chirp.UserID,
 		},
 	})
-	return
 }
 
 func validateChirp(body *string) (string, error) {

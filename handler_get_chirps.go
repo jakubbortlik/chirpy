@@ -34,7 +34,6 @@ func handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, chirps)
-	return
 }
 
 func handlerGetIndividualChirp(w http.ResponseWriter, r *http.Request) {
@@ -64,5 +63,4 @@ func handlerGetIndividualChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, chirp)
-	return
 }

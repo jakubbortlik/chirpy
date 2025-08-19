@@ -120,7 +120,7 @@ func TestMakeJWT(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			token, err := MakeJWT(tt.userID, tt.createSecret, tt.expiresIn)
+			token, err := MakeJWT(tt.userID, tt.createSecret)
 			if (err != nil) != tt.wantMakeErr {
 				t.Errorf("MakeJWT() error = %v, wantErr %v", err, tt.wantMakeErr)
 			}
