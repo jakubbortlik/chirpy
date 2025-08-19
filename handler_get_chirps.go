@@ -16,8 +16,22 @@ func handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Opening database connection failed.", err)
 		return
 	}
+
+	filterUserID := uuid.NullUUID{
+		UUID: uuid.Nil,
+	}
+
+	if authorID := r.URL.Query().Get("author_id"); authorID != "" {
+		userID, err := uuid.Parse(authorID)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Parsing author_id failed.", err)
+			return
+		}
+		filterUserID.UUID = userID
+	}
+
 	dbQueries := database.New(db)
-	chirps_data, err := dbQueries.GetChirps(r.Context())
+	chirps_data, err := dbQueries.GetChirps(r.Context(), filterUserID.UUID)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Getting chirps from database failed.", err)
 		return
