@@ -13,6 +13,7 @@ import (
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	JWTSecret      string
+	PolkaKey       string
 }
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 	fs := http.FileServer(http.Dir(filepathRoot))
 	apiCfg := &apiConfig{
 		JWTSecret: os.Getenv("JWT_SECRET"),
+		PolkaKey:  os.Getenv("POLKA_KEY"),
 	}
 
 	mux := http.NewServeMux()
@@ -56,7 +58,9 @@ func main() {
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
 
-	mux.HandleFunc("POST /api/polka/webhooks", handlerUpgradeUser)
+	mux.HandleFunc("POST /api/polka/webhooks", func(w http.ResponseWriter, r *http.Request) {
+		handlerUpgradeUser(w, r, apiCfg)
+	})
 
 	server := &http.Server{
 		Addr:    ":" + port,

@@ -7,10 +7,17 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/jakubbortlik/chirpy/internal/auth"
 	"github.com/jakubbortlik/chirpy/internal/database"
 )
 
-func handlerUpgradeUser(w http.ResponseWriter, r *http.Request) {
+func handlerUpgradeUser(w http.ResponseWriter, r *http.Request, apiConfig *apiConfig) {
+	key, err := auth.GetAPIKey(r.Header)
+
+	if key != apiConfig.PolkaKey {
+		respondWithError(w, http.StatusUnauthorized, "Unauthorized request", err)
+		return
+	}
 
 	type Data struct {
 		UserID uuid.UUID `json:"user_id"`
@@ -25,7 +32,7 @@ func handlerUpgradeUser(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Decoding parameters failed", err)
 		return
